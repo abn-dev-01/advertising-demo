@@ -1,0 +1,24 @@
+#
+debug: true
+
+# swagger-ui custom path
+springdoc:
+  packagesToScan: auctions
+  swagger-ui:
+    path: /swagger-ui.html
+    # Disabling the swagger-ui
+    enabled: true
+  api-docs:
+    path: /api-docs
+    # Disabling the /v3/api-docs enpoint
+    enabled: true
+
+spring:
+  devtools:
+    add-properties: ${SRPING_DEV_TOOLS:true}
+
+  application:
+    name: chech21-test
+    
+server:
+  port: ${PORT:8080}

@@ -1,0 +1,102 @@
+plugins {
+    id 'org.springframework.boot' version '2.5.2'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+    id 'java'
+}
+
+group = 'de.check21.test'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    openApiVersion = '1.5.9'
+    apacheCommonsLang3 = '3.12.0'
+    apacheCommonsCollections4 = '4.4'
+    set('springCloudVersion', "2020.0.3")
+    set('springRetryVersion', "1.3.1")
+}
+
+dependencies {
+
+    // lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly('org.projectlombok:lombok')
+    testAnnotationProcessor("org.projectlombok:lombok")
+
+    // spring
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation('org.springframework.boot:spring-boot-starter-web') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
+    implementation "org.springframework.boot:spring-boot-starter-log4j2"
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // openApi 
+    implementation "org.springdoc:springdoc-openapi:${openApiVersion}"
+    implementation "org.springdoc:springdoc-openapi-webmvc-core:${openApiVersion}"
+    implementation "org.springdoc:springdoc-openapi-hateoas:${openApiVersion}"
+
+    // Common libs 
+    implementation("org.apache.commons:commons-lang3:${apacheCommonsLang3}")
+    implementation("org.apache.commons:commons-collections4:${apacheCommonsCollections4}")
+
+    // testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+configurations {
+    all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        exclude group: "ch.qos.logback", module: "logback-classic"
+        exclude group: "org.springframework.cloud", module: "spring-cloud-bus"
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+shadowJar {
+    classifier = null
+    // do not append "-all", so the generated shadow jar replaces the existing jfxtras-all.jar (instead of generating jfxtras-all-all.jar)
+}
+
+// Must be BELOW subprojects{}
+task alljavadoc(type: Javadoc) {
+    source subprojects.collect { it.sourceSets.main.allJava }
+    classpath = files(subprojects.collect { it.sourceSets.main.compileClasspath })
+    destinationDir = file("${buildDir}/docs/javadoc")
+}
+
+task javadocJar(type: Jar, dependsOn: alljavadoc) {
+    classifier = 'javadoc'
+    from alljavadoc.destinationDir
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from subprojects.collect { it.sourceSets.main.allSource }
+}
+
+shadowJar.finalizedBy javadocJar
+shadowJar.finalizedBy sourcesJar
