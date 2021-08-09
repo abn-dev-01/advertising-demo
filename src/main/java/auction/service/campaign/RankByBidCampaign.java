@@ -28,6 +28,7 @@ public class RankByBidCampaign implements Campaign {
 
         // get bids for given `keyword` sorted by DESC on their Bids 
         var bidders = bidderService.getAdvertisingByKeywordOnBidDesc(keyword);
+        // TODO warning about millions bidders in the LOG! think about first 10/30/50/100 items
         LOG.debug("Bidders from a Repository sorted by DESC: {}", () -> bidders);
 
         var maxSize = limit == null || limit == 0 ? bidders.size() : limit;
